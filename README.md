@@ -116,6 +116,66 @@ Design work is being done **before coding** to avoid rework and confusion.
 
 ---
 
+## Use case diagram
+
+<img width="940" height="705" alt="image" src="https://github.com/user-attachments/assets/67a74123-7d5d-4aac-9b66-fee7d0b3cefe" />
+
+This is the current use case diagram for onboarding users.
+
+---
+## User Flows for Phase 1
+
+### New User Onboarding Flow
+Goal: Allow a new user to create an account and reach the dashboard.
+   1. Welcome Screen
+   2. Create Account (Sign Up)
+   3. Login
+   4. Dashboard (No Partner Linked)
+
+### Returning User Flow
+Goal: Allow an existing user to access their account.
+   1. Welcome Screen
+   2. Login
+   3. Dashboard (Partner status visible)
+
+### Send Partner Invite Flow
+Goal: Allow a user to invite their partner.
+   1. Dashboard
+   2. Open User Menu (Dropdown)
+   3. Select Partner Management
+   4. Partner Management Screen (No Partner Linked)
+   5. Generate Partner Invite (code or link)
+   6. Await Partner Response (Pending State)
+
+📌 Important UX State:
+User sees:
+* “Invite Sent”
+* Invite status: Pending
+* Option to cancel / regenerate invite
+
+### Accept Partner Invite Flow
+Goal: Allow a user to accept an incoming partner invite.
+   1. Dashboard
+   2. Open User Menu (Dropdown)
+   3. Select Partner Management
+   4. Partner Management Screen (Invite Received)
+   5. Accept Partner Invite
+   6. Dashboard (Partner Linked)
+
+### Unlink Partner Flow
+Goal: Allow a user to remove an existing partner.
+   1. Dashboard
+   2. Open User Menu (Dropdown)
+   3. Select Partner Management
+   4. Partner Management Screen (Partner Linked)
+   5. Remove Partner
+   6. Dashboard (No Partner Linked)
+
+⚠️ UX Safeguard:
+Confirmation modal (“Are you sure?”)
+
+---
+
 ## What Is NOT Done Yet
 
 * No authentication logic
