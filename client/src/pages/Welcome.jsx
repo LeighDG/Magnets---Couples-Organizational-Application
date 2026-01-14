@@ -1,24 +1,64 @@
-export default function Welcome() {
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
+import bgImage from "../assets/background-img.png";
+import logoImage from "../assets/magnetic-logo.png";
+
+import {
+  FaLinkedinIn,
+  FaFacebookF,
+  FaXTwitter,
+  FaInstagram,
+} from "react-icons/fa6";
+
+export default function WelcomePage() {
+  const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center space-y-6">
-        <h1 className="text-4xl font-bold text-gray-900">
-          Magnet
-        </h1>
+    <div className="relative min-h-screen w-full overflow-hidden">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 bg-center bg-cover blur-md scale-105"
+        style={{ 
+          backgroundImage: 
+            `url(${bgImage})` 
+        }}
+      />
 
-        <p className="text-gray-600 max-w-md mx-auto">
-          Organise your relationship like a fridge —
-          notes, reminders, and moments that stick.
-        </p>
+      {/* Dark overlay for contrast */}
+      <div className="absolute inset-0 bg-black/15" />
 
-        <div className="flex justify-center gap-4">
-          <button className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition">
-            Get Started
-          </button>
+      {/* Content */}
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-10">
+        <div className="flex w-full max-w-4xl items-center justify-between">
+          {/* Logo section */}
+          <div className="flex flex-col items-start">
+            <img
+              src={logoImage}
+              alt="Magnetic logo"
+              className="w-80 h-auto object-contain"
+            />
+          </div>
 
-          <button className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-200 transition">
-            Log In
-          </button>
+          {/* Buttons */}
+          <div className="mt-10 w-full max-w-xs space-y-4 flex flex-col items-center">
+            <button 
+            onClick={() => navigate("/signup")}
+            className="w-full rounded-xl bg-white py-3 text-sm font-medium text-neutral-900 shadow-md transition hover:bg-neutral-100">
+              Get Started
+            </button>
+            <button 
+            onClick={() => navigate("/login")}
+            className="w-full rounded-xl bg-neutral-900 py-3 text-sm font-medium text-white shadow-md transition hover:bg-neutral-800">
+              Login
+            </button>
+
+            <div className="mt-4 flex gap-6 text-neutral-800">
+            <FaLinkedinIn className="h-4 w-4 cursor-pointer hover:opacity-70 transition" />
+            <FaFacebookF className="h-4 w-4 cursor-pointer hover:opacity-70 transition" />
+            <FaXTwitter className="h-4 w-4 cursor-pointer hover:opacity-70 transition" />
+            <FaInstagram className="h-4 w-4 cursor-pointer hover:opacity-70 transition" />
+          </div>
+          </div>
         </div>
       </div>
     </div>
