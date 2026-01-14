@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-import bgImage from "../assets/background-img.png";
+import BackgroundLayout from "../components/BackgroundLayout";
 import logoImage from "../assets/magnetic-logo.png";
 
 import {
@@ -14,19 +14,7 @@ import {
 export default function WelcomePage() {
   const navigate = useNavigate();
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      {/* Background Image */}
-      <div
-        className="absolute inset-0 bg-center bg-cover blur-md scale-105"
-        style={{ 
-          backgroundImage: 
-            `url(${bgImage})` 
-        }}
-      />
-
-      {/* Dark overlay for contrast */}
-      <div className="absolute inset-0 bg-black/15" />
-
+    <BackgroundLayout>
       {/* Content */}
       <div className="relative z-10 flex min-h-screen items-center justify-center px-10">
         <div className="flex w-full max-w-4xl items-center justify-between">
@@ -61,6 +49,6 @@ export default function WelcomePage() {
           </div>
         </div>
       </div>
-    </div>
+    </BackgroundLayout>
   );
 }
