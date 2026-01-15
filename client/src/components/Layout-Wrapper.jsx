@@ -1,17 +1,17 @@
 // Layout.jsx
 import Sidebar from './Sidebar';
-import Header from './Header';
+import Navbar from './NavigationBar';
 
 const Layout = ({ children }) => {
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen">
       {/* Sidebar stays fixed on the left */}
       <Sidebar />
       
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="p-8 overflow-y-auto">
+        <Navbar />
+        <main className="">
           {children}
         </main>
       </div>
