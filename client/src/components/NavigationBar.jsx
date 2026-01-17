@@ -1,6 +1,7 @@
 // Header.jsx
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   UserCircleIcon, 
   ChevronDownIcon, 
@@ -10,11 +11,11 @@ import {
 
 const Header = () => {
   const menuItems = [
-    { label: 'ACCOUNT OPTIONS', href: '/account' },
-    { label: 'PARTNER LINK', href: '/link' },
-    { label: 'About Magnetic', href: '/about' },
-    { label: 'Logout', href: '/logout' },
-  ];
+  { label: "ACCOUNT OPTIONS", to: "/account" }, 
+  { label: "PARTNER LINK", to: "/partner-link" },   
+  { label: "About Magnetic", to: "/about" },        
+  { label: "Logout", to: "/logout" },               
+];
 
   return (
     <header className="h-20 bg-[#F2E9E1] flex items-center justify-between px-8 shadow-sm relative z-50">
@@ -41,29 +42,27 @@ const Header = () => {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Items className="absolute right-0 mt-7 w-72 origin-top-right outline-none">
-            {/* The outer "glass" container from image_d83b67.png */}
-            <div className="bg-white/20 backdrop-blur-md p-3 rounded-[2.5rem] shadow-2xl border border-white/30">
-              
+          <Menu.Items className="absolute right-0 mt-4 w-72 origin-top-right outline-none">
+            {/* Outer Glass Container */}
+            <div className="bg-white/30 backdrop-blur-md p-3 rounded-[2rem] shadow-2xl border border-white/40">
               {/* Inner Content Card */}
-              <div className="bg-[#F9F5F2] rounded-[2rem] overflow-hidden py-2">
+              <div className="bg-[#F9F5F2] rounded-[1.5rem] overflow-hidden py-2 shadow-inner">
                 {menuItems.map((item) => (
                   <Menu.Item key={item.label}>
                     {({ active }) => (
-                      <a
-                        href={item.href}
-                        className={`flex items-center justify-between px-6 py-4 text-[13px] font-bold tracking-wider transition-colors
-                          ${active ? 'bg-black/5' : ''} text-[#1A1A1A]`}
+                      <Link
+                        to={item.to}
+                        className={`flex items-center justify-between px-6 py-4 text-sm font-semibold tracking-wide transition-colors
+                          ${active ? "bg-black/5 text-black" : "text-[#2D2D2D]"}`}
                       >
                         <div className="flex items-center gap-3">
-                          {/* Circular Star Icon as seen in your crop */}
                           <div className="border border-black rounded-full p-0.5">
-                            <StarIcon className="h-3 w-3 fill-black" />
+                            <StarIcon className="h-3 w-3" />
                           </div>
                           {item.label}
                         </div>
                         <ChevronRightIcon className="h-3 w-3 stroke-[3px]" />
-                      </a>
+                      </Link>
                     )}
                   </Menu.Item>
                 ))}
