@@ -1,11 +1,39 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+
 
 import BackgroundLayout from "../components/BackgroundLayout";
 
 
-export default function LoginPage() {
+export default function SignupPage() {
   const navigate = useNavigate();
+  const { signup } = useAuth();
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await signup({ firstName, lastName, email, password });
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err?.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <BackgroundLayout>
       {/* Content */}
@@ -22,34 +50,51 @@ export default function LoginPage() {
           </div>
           
           <div className="w-full">
+
+          {/* Error */}
+          {error && (
+            <p className="mb-4 rounded-lg bg-red-500/20 px-4 py-3 text-sm text-red-100">
+              {error}
+            </p>
+          )}
+
           {/* Form */}
-          <form className="w-full space-y-4">
+          <form className="w-full space-y-4" onSubmit={handleSubmit}> 
             <input
               type="text"
               placeholder="FIRST NAME"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
               className="w-full rounded-lg bg-white px-4 py-3 text-center text-sm text-neutral-900 placeholder-neutral-500 outline-none"
             />
             <input
               type="text"
               placeholder="LAST NAME"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
               className="w-full rounded-lg bg-white px-4 py-3 text-center text-sm text-neutral-900 placeholder-neutral-500 outline-none"
             />
             <input
               type="email"
               placeholder="EMAIL"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-lg bg-white px-4 py-3 text-center text-sm text-neutral-900 placeholder-neutral-500 outline-none"
             />
             <input
               type="password"
               placeholder="PASSWORD"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg bg-white px-4 py-3 text-center text-sm text-neutral-900 placeholder-neutral-500 outline-none"
             />
 
             <button
               type="submit"
+              disabled={loading}
               className="mt-4 w-full rounded-xl bg-neutral-900 py-3 text-sm font-medium text-white shadow-md hover:bg-neutral-800 transition"
             >
-              SIGNUP
+              {loading ? "CREATING..." : "SIGNUP"}
             </button>
           </form>
             </div>
