@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import * as authService from "../services/authService";
 
 const AuthContext = createContext(null);
@@ -10,6 +10,31 @@ export function AuthProvider({ children }) {
   });
 
   const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [loading, setLoading] = useState(true);
+
+  // On app start: if token exists, confirm it by calling /auth/me
+  useEffect(() => {
+    const t = localStorage.getItem("token");
+    if (!t) {
+      setLoading(false);
+      return;
+    }
+
+    authService
+      .me()
+      .then(({ user: u }) => {
+        localStorage.setItem("user", JSON.stringify(u));
+        setUser(u);
+        setToken(t);
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setToken(null);
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const signup = async (payload) => {
     const { token: t, user: u } = await authService.signup(payload);
@@ -36,7 +61,10 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
-  const value = useMemo(() => ({ user, token, signup, login, logout }), [user, token]);
+  const value = useMemo(
+    () => ({ user, token, loading, signup, login, logout }),
+    [user, token, loading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
