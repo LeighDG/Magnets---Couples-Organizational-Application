@@ -173,6 +173,59 @@ Goal: Allow a user to remove an existing partner.
 
 ⚠️ UX Safeguard:
 Confirmation modal (“Are you sure?”)
+---
+
+## Entity Relationship Diagram for partner linking
+
+<img width="1166" height="647" alt="image" src="https://github.com/user-attachments/assets/b7e48081-3dce-4c08-b7d4-1e162628f790" />
+
+---
+
+## How partner linking works (flow)
+A) User generates an invite link/code
+1. Check inviter is not already in an ACTIVE relationship (or decide your rules).
+2. Create a Relationship.
+3. Create RelationshipMember for inviter.
+4. Create PartnerInvite with tokenHash, status=PENDING, expiresAt (e.g., 24h).
+5. Return the raw token to the client (only once), like:
+   - link: /partner-link?token=RAW_TOKEN
+   - or 6-digit code (mapped to token internally)
+
+B) Partner accepts invite
+1. Partner submits token.
+2. Server hashes token and finds PartnerInvite where:
+3. tokenHash matches
+4. status = PENDING
+5. expiresAt > now
+6. Check relationship currently has < 2 members.
+7. Create RelationshipMember for the accepting user.
+8. Mark invite ACCEPTED, set acceptedAt.
+9. Relationship becomes ACTIVE (if you want a status flip when 2 members exist)
+
+That’s it. Now both users share the same relationshipId.
+
+### How “syncing shared features” works
+Every shared record belongs to the relationship, not a user.
+
+### Permissions model (simple and safe)
+A user can access data only if they are a RelationshipMember of that relationship.
+For any API request involving relationship data, enforce:
+- decode JWT → userId
+- look up user’s relationshipId via RelationshipMember
+- only allow CRUD on rows with that relationshipId
+This prevents cross-relationship access even if someone guesses IDs.
+
+### What about “unlinked” users?
+They just don’t have a RelationshipMember record yet.
+Their personal features can either be disabled, or stored as “personal” records tied to userId.
+If you want pre-link usage: you can support personal mode now and migrate later by copying or by letting tasks be either userId or relationshipId. But if MVP is couples-first, keep it simple: relationship is required for shared features.
+
+### Recommended constraints/rules (MVP-friendly)
+- One active relationship per user (enforced in app logic)
+- One pending invite at a time per relationship
+- Invites expire
+- Token is stored hashed
+- Accepting user can’t be the inviter
 
 ---
 
