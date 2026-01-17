@@ -9,26 +9,23 @@ import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <Routes>
+      {/* Public */}
       <Route path="/" element={<Welcome />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+
+      {/* Protected */}
       <Route
-        path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            {/* All protected pages go inside */}
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/partner-link"
-        element={
-          <ProtectedRoute>
-            <PartnerLink />
-          </ProtectedRoute>
-        }
-      />
-          </Routes>
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/partner-link" element={<PartnerLink />} />
+      </Route>
+    </Routes>
   );
 }
 
