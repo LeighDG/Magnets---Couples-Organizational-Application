@@ -495,4 +495,35 @@ router.post("/revoke", requireAuth, async (req, res) => {
   }
 });
 
+/**
+ * POST /relationship/unlink
+ * MVP: deletes the relationship the current user belongs to.
+ */
+router.post("/unlink", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Find the user's membership
+    const membership = await prisma.relationshipMember.findFirst({
+      where: { userId },
+      select: { relationshipId: true },
+    });
+
+    if (!membership) {
+      return res.status(404).json({ message: "No relationship found" });
+    }
+
+    // Delete the relationship (cascades members + invites)
+    await prisma.relationship.delete({
+      where: { id: membership.relationshipId },
+    });
+
+    return res.json({ message: "Relationship unlinked" });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: "Failed to unlink relationship" });
+  }
+});
+
+
 module.exports = router;

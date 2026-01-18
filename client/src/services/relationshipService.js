@@ -39,3 +39,8 @@ export async function acceptByToken(token) {
 export async function revokeInvite() {
   return apiClient("/relationship/revoke", { method: "POST" });
 }
+
+// POST /relationship/unlink
+export async function unlinkRelationship() {
+  return apiClient("/relationship/unlink", { method: "POST" });
+}

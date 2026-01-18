@@ -99,11 +99,6 @@ export default function RelationshipPage() {
           return;
         }
 
-        // UNLINKED
-        setRelationship(null);
-        setInvite(null);
-        setView(VIEW.INVITE);
-        setActiveKey("INVITE");
       } catch (e) {
         if (!cancelled) setPageError(e.message || "Failed to load relationship state");
       } finally {
@@ -166,6 +161,26 @@ export default function RelationshipPage() {
     setActiveKey("DETAILS");
   };
 
+  const onUnlink = async () => {
+  setPageError("");
+  try {
+    const ok = window.confirm(
+      "Are you sure you want to unlink? Shared features will stop syncing."
+    );
+    if (!ok) return;
+
+    await relationshipService.unlinkRelationship();
+
+    // Reset UI state to unlinked
+    setRelationship(null);
+    setInvite(null);
+    setView(VIEW.INVITE);
+    setActiveKey("INVITE");
+  } catch (e) {
+    setPageError(e.message || "Failed to unlink relationship");
+  }
+};
+
   return (
     <BackgroundLayout>
       <LayoutWrapper
@@ -203,7 +218,7 @@ export default function RelationshipPage() {
         )}
 
         {!loading && !pageError && view === VIEW.DETAILS && (
-          <Details relationship={relationship} />
+          <Details relationship={relationship} onUnlink={onUnlink}/>
         )}
       </LayoutWrapper>
     </BackgroundLayout>
