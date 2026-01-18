@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// src/pages/relationship/RelationshipPage.jsx
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import BackgroundLayout from "../../components/BackgroundLayout";
 import LayoutWrapper from "../../components/Layout-Wrapper";
@@ -10,23 +11,7 @@ import Accept from "./Accept";
 import Details from "./Details";
 import { RELATIONSHIP_NAV } from "./relationshipNav";
 
-// Later these will come from partnerService
-async function mockLookupInviteByCode(code) {
-  // Replace with real API call: partnerService.lookupByCode(code)
-  if (code === "K3T6-123F" || code === "MAG-482193") {
-    return {
-      inviterName: "Partner 1",
-      inviterEmail: "partner1@email.com",
-      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-    };
-  }
-  throw new Error("Invalid or expired code");
-}
-
-async function mockAcceptInviteByCode(code) {
-  // Replace with real API call: partnerService.acceptByCode(code)
-  return true;
-}
+import * as relationshipService from "../../services/relationshipService";
 
 const VIEW = {
   INVITE: "INVITE",
@@ -35,67 +20,150 @@ const VIEW = {
   DETAILS: "DETAILS",
 };
 
+function useQuery() {
+  const { search } = useLocation();
+  return useMemo(() => new URLSearchParams(search), [search]);
+}
+
 export default function RelationshipPage() {
   const navigate = useNavigate();
+  const query = useQuery();
+  const token = query.get("token");
 
-  // In real build this state should come from GET /partner/me + invite status
   const [view, setView] = useState(VIEW.INVITE);
+  const [activeKey, setActiveKey] = useState("INVITE");
+
+  const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
+
+  const [invite, setInvite] = useState(null);
+  const [relationship, setRelationship] = useState(null);
 
   const sidebarItems = useMemo(() => RELATIONSHIP_NAV, []);
-  const activeKey = useMemo(() => {
-    if (view === VIEW.INVITE || view === VIEW.WAITING) return "INVITE";
-    if (view === VIEW.JOIN) return "JOIN";
-    return "DETAILS";
-  }, [view]);
 
   const onSidebarSelect = (key) => {
-    if (key === "INVITE") setView(VIEW.INVITE);
+    setActiveKey(key);
+
+    if (key === "INVITE") setView(invite ? VIEW.WAITING : VIEW.INVITE);
     if (key === "JOIN") setView(VIEW.JOIN);
     if (key === "DETAILS") setView(VIEW.DETAILS);
   };
 
-  // Placeholder invite data; later from POST /partner/invite
-  const [invite, setInvite] = useState({
-    sharedCode: "K3T6-123F",
-    expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-    link: `${window.location.origin}/relationship?token=demo`,
-  });
+  // Bootstrap state from backend: /relationship/me
+  useEffect(() => {
+    let cancelled = false;
 
+    async function boot() {
+      setLoading(true);
+      setPageError("");
+
+      try {
+        // If token exists, attempt accept-by-token first (after login, route is protected)
+        if (token) {
+          const accepted = await relationshipService.acceptByToken(token);
+
+          if (cancelled) return;
+
+          setRelationship(accepted.relationship);
+          setInvite(null);
+          setView(VIEW.DETAILS);
+          setActiveKey("DETAILS");
+
+          // clean URL (remove token)
+          navigate("/relationship", { replace: true });
+          return;
+        }
+
+        const data = await relationshipService.getMyRelationship();
+        if (cancelled) return;
+
+        if (data.state === "LINKED") {
+          setRelationship(data.relationship);
+          setInvite(null);
+          setView(VIEW.DETAILS);
+          setActiveKey("DETAILS");
+          return;
+        }
+
+        if (data.state === "WAITING") {
+          // /relationship/me does NOT return link token; we’ll reconstruct link client-side
+          const link = `${window.location.origin}/relationship`; // token only returned when created
+          setInvite({
+            sharedCode: data.invite?.sharedCode || null,
+            expiresAt: data.invite?.expiresAt || null,
+            link: link, // placeholder; real link shown only right after creation
+          });
+          setRelationship(null);
+          setView(VIEW.WAITING);
+          setActiveKey("INVITE");
+          return;
+        }
+
+        // UNLINKED
+        setRelationship(null);
+        setInvite(null);
+        setView(VIEW.INVITE);
+        setActiveKey("INVITE");
+      } catch (e) {
+        if (!cancelled) setPageError(e.message || "Failed to load relationship state");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    boot();
+    return () => {
+      cancelled = true;
+    };
+  }, [token, navigate]);
+
+  // Create invite (real)
   const onCreateInvite = async () => {
-    // later: const data = await partnerService.createInvite()
-    // setInvite(data)
-    setView(VIEW.WAITING);
-  };
-
-  const onCopyCode = async () => {
-    await navigator.clipboard.writeText(invite.sharedCode);
+    setPageError("");
+    try {
+      const data = await relationshipService.createInvite();
+      // data: { sharedCode, expiresAt, link }
+      setInvite({
+        sharedCode: data.sharedCode,
+        expiresAt: data.expiresAt,
+        link: data.link,
+      });
+      setView(VIEW.WAITING);
+      setActiveKey("INVITE");
+    } catch (e) {
+      setPageError(e.message || "Failed to create invite");
+    }
   };
 
   const onCopyLink = async () => {
+    if (!invite?.link) return;
     await navigator.clipboard.writeText(invite.link);
   };
 
   const onCancel = async () => {
-    // later: await partnerService.revokeInvite(inviteId)
-    setView(VIEW.INVITE);
+    setPageError("");
+    try {
+      await relationshipService.revokeInvite();
+      setInvite(null);
+      setView(VIEW.INVITE);
+      setActiveKey("INVITE");
+    } catch (e) {
+      setPageError(e.message || "Failed to cancel invite");
+    }
   };
 
+  // Accept page hooks
   const lookupInviteByCode = async (code) => {
-    return mockLookupInviteByCode(code);
+    return relationshipService.lookupByCode(code);
   };
 
   const acceptInviteByCode = async (code) => {
-    await mockAcceptInviteByCode(code);
-    // After accept, go to details (or dashboard). Your screenshots show details page next.
+    const data = await relationshipService.acceptByCode(code);
+    // data: { relationship }
+    setRelationship(data.relationship);
+    setInvite(null);
     setView(VIEW.DETAILS);
-    // or: navigate("/dashboard");
-  };
-
-  const relationship = {
-    members: [
-      { user: { id: "1", firstName: "You", lastName: "", email: "you@email.com" } },
-      { user: { id: "2", firstName: "Partner", lastName: "One", email: "partner@email.com" } },
-    ],
+    setActiveKey("DETAILS");
   };
 
   return (
@@ -105,25 +173,38 @@ export default function RelationshipPage() {
         activeSidebarKey={activeKey}
         onSidebarSelect={onSidebarSelect}
       >
-        {view === VIEW.INVITE && <Invite onCreateInvite={onCreateInvite} />}
+        {loading ? (
+          <div className="max-w-4xl mx-auto mt-12 text-white">
+            Loading...
+          </div>
+        ) : null}
 
-        {view === VIEW.WAITING && (
-          <Waiting
-            invite={invite}
-            onCopyCode={onCopyCode}
-            onCopyLink={onCopyLink}
-            onCancel={onCancel}
-          />
+        {!loading && pageError ? (
+          <div className="max-w-4xl mx-auto mt-12">
+            <div className="bg-red-500/20 border border-red-500/30 text-red-100 px-4 py-3 rounded">
+              {pageError}
+            </div>
+          </div>
+        ) : null}
+
+        {!loading && !pageError && view === VIEW.INVITE && (
+          <Invite onCreateInvite={onCreateInvite} />
         )}
 
-        {view === VIEW.JOIN && (
+        {!loading && !pageError && view === VIEW.WAITING && (
+          <Waiting invite={invite} onCopyLink={onCopyLink} onCancel={onCancel} />
+        )}
+
+        {!loading && !pageError && view === VIEW.JOIN && (
           <Accept
             lookupInviteByCode={lookupInviteByCode}
             acceptInviteByCode={acceptInviteByCode}
           />
         )}
 
-        {view === VIEW.DETAILS && <Details relationship={relationship} />}
+        {!loading && !pageError && view === VIEW.DETAILS && (
+          <Details relationship={relationship} />
+        )}
       </LayoutWrapper>
     </BackgroundLayout>
   );

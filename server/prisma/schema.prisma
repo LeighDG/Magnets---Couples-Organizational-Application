@@ -70,6 +70,7 @@ model PartnerInvite {
 
   inviteeEmail     String?            // nullable: allows “share link” invites
   tokenHash        String             @unique
+  sharedCode       String?            @unique
 
   status           PartnerInviteStatus @default(PENDING)
   expiresAt        DateTime
@@ -91,4 +92,5 @@ model PartnerInvite {
   @@index([inviterUserId])
   @@index([status, expiresAt])
   @@index([inviteeEmail])
+  @@index([sharedCode])
 }
