@@ -3,8 +3,8 @@ import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
-import PartnerLink from "./pages/PartnerLink";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RelationshipPage from "./pages/relationship/RelationshipPage";
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/partner-link" element={<PartnerLink />} />
+        <Route path="/relationship" element={<RelationshipPage />} />
       </Route>
     </Routes>
   );

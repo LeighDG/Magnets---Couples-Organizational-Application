@@ -16,7 +16,7 @@ const Header = () => {
 
   const menuItems = [
     { label: "ACCOUNT OPTIONS", to: "/account" },
-    { label: "PARTNER LINK", to: "/partner-link" },
+    { label: "MANAGE RELATIONSHIP", to: "/relationship" },
     { label: "About Magnetic", to: "/about" },
     { label: "Logout", action: "logout" }, // <-- action, not route
   ];
