@@ -6,18 +6,11 @@ const PartnerLink = () => {
   return (
     <BackgroundLayout>
     <LayoutWrapper>
-      <div className="max-w-4xl mx-auto mt-12">
-        {/* Section Label */}
-        <div className="mb-4">
-          <span className="bg-[#3D3D3D] text-white text-xs px-3 py-1 rounded">
-            Section 1
-          </span>
-        </div>
-
+      <div className="min-h-screen flex items-center justify-center px-4">
+        
         {/* Glassmorphism Card */}
         <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-12 shadow-2xl overflow-hidden">
           <div className="flex flex-col md:flex-row justify-between items-start gap-12">
-            
             {/* Left Side: Form */}
             <div className="flex-1 space-y-6">
               <div>
