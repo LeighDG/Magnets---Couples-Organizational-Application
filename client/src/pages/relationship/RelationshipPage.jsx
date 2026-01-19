@@ -12,6 +12,8 @@ import Details from "./Details";
 import { RELATIONSHIP_NAV } from "./relationshipNav";
 
 import * as relationshipService from "../../services/relationshipService";
+import useRealtimeStream from "../../hooks/useRealtimeStream.cjs";
+
 
 const VIEW = {
   INVITE: "INVITE",
@@ -99,6 +101,12 @@ export default function RelationshipPage() {
           return;
         }
 
+        // UNLINKED (default)
+        setRelationship(null);
+        setInvite(null);
+        setView(VIEW.INVITE);
+        setActiveKey("INVITE");
+
       } catch (e) {
         if (!cancelled) setPageError(e.message || "Failed to load relationship state");
       } finally {
@@ -180,6 +188,37 @@ export default function RelationshipPage() {
     setPageError(e.message || "Failed to unlink relationship");
   }
 };
+
+  // Real-time: when partner accepts, jump inviter to DETAILS
+  useRealtimeStream({
+    onRelationshipLinked: async () => {
+      try {
+        const data = await relationshipService.getMyRelationship();
+        if (data.state === "LINKED") {
+          setRelationship(data.relationship);
+          setInvite(null);
+          setView(VIEW.DETAILS);
+          setActiveKey("DETAILS");
+        }
+      } catch {
+        // ignore
+      }
+    },
+
+     onRelationshipUnlinked: async () => {
+
+      // cleanup any stored invite links
+Object.keys(localStorage)
+  .filter((k) => k.startsWith("inviteLink:"))
+  .forEach((k) => localStorage.removeItem(k));
+
+    // Force reset to unlinked state
+    setRelationship(null);
+    setInvite(null);
+    setView(VIEW.INVITE);
+    setActiveKey("INVITE");
+  },
+  });
 
   return (
     <BackgroundLayout>

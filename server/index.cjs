@@ -5,6 +5,8 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/auth.cjs");
 const relationshipRoutes = require("./routes/relationship.cjs");
+const realtimeRoutes = require("./routes/realtimeSse.cjs");
+
 
 const app = express();
 
@@ -22,5 +24,7 @@ app.get("/health", (req, res) => res.json({ status: "OK" }));
 
 app.use("/auth", authRoutes);
 app.use("/relationship", relationshipRoutes);
+app.use("/realtime", realtimeRoutes);
+
 
 app.listen(3000, () => console.log("API running on http://localhost:3000"));

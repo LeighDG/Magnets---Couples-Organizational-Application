@@ -2,6 +2,8 @@ const express = require("express");
 const crypto = require("crypto");
 const { PrismaClient } = require("@prisma/client");
 const requireAuth = require("../middleware/requireAuth.cjs");
+const realtime = require("../realtime/realtime.cjs");
+
 
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -352,6 +354,10 @@ router.post("/accept-code", requireAuth, async (req, res) => {
       return updatedRelationship;
     });
 
+    // Notify both users in real-time
+    realtime.notifyUser(invite.inviterUserId, "relationship_linked", { relationshipId: result.id });
+    realtime.notifyUser(userId, "relationship_linked", { relationshipId: result.id });
+
     return res.json({
       message: "Linked successfully",
       relationship: {
@@ -438,6 +444,10 @@ router.post("/accept-token", requireAuth, async (req, res) => {
   });
 });
 
+    // Notify both users in real-time
+    realtime.notifyUser(invite.inviterUserId, "relationship_linked", { relationshipId: result.id });
+    realtime.notifyUser(userId, "relationship_linked", { relationshipId: result.id });
+
 
     return res.json({
       message: "Linked successfully",
@@ -503,20 +513,40 @@ router.post("/unlink", requireAuth, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Find the user's membership
+    // Find relationship + members
     const membership = await prisma.relationshipMember.findFirst({
       where: { userId },
-      select: { relationshipId: true },
+      include: {
+        relationship: {
+          include: {
+            members: true,
+          },
+        },
+      },
     });
 
     if (!membership) {
       return res.status(404).json({ message: "No relationship found" });
     }
 
-    // Delete the relationship (cascades members + invites)
+    const relationshipId = membership.relationshipId;
+
+    // Capture all user IDs BEFORE deletion
+    const memberUserIds = membership.relationship.members.map(
+      (m) => m.userId
+    );
+
+    // Delete relationship (cascade deletes members + invites)
     await prisma.relationship.delete({
-      where: { id: membership.relationshipId },
+      where: { id: relationshipId },
     });
+
+    // 🔔 REALTIME: notify all former members
+    for (const uid of memberUserIds) {
+      realtime.notifyUser(uid, "relationship_unlinked", {
+        relationshipId,
+      });
+    }
 
     return res.json({ message: "Relationship unlinked" });
   } catch (e) {
@@ -524,6 +554,7 @@ router.post("/unlink", requireAuth, async (req, res) => {
     return res.status(500).json({ message: "Failed to unlink relationship" });
   }
 });
+
 
 
 module.exports = router;
