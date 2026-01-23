@@ -211,7 +211,7 @@ router.post("/invite", requireAuth, async (req, res) => {
       },
     });
 
-    const link = `${CLIENT_URL}/relationship?token=${rawToken}`;
+    const link = `${CLIENT_URL}/relationship?code=${encodeURIComponent(invite.sharedCode)}`;
 
     return res.status(201).json({
       sharedCode: invite.sharedCode,
