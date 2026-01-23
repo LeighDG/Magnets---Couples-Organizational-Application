@@ -3,12 +3,6 @@ export default function Details({ relationship, onUnlink }) {
 
   return (
     <div className="max-w-4xl mx-auto mt-12">
-      <div className="mb-4">
-        <span className="bg-[#3D3D3D] text-white text-xs px-3 py-1 rounded">
-          Section 4
-        </span>
-      </div>
-
       <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-12 shadow-2xl overflow-hidden">
         <h2 className="text-4xl font-bold text-white tracking-tight mb-4">
           RELATIONSHIP DETAILS

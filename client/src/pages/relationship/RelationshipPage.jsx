@@ -30,7 +30,7 @@ function useQuery() {
 export default function RelationshipPage() {
   const navigate = useNavigate();
   const query = useQuery();
-  const token = query.get("token");
+  const codeFromLink = query.get("code"); // new link format
 
   const [view, setView] = useState(VIEW.INVITE);
   const [activeKey, setActiveKey] = useState("INVITE");
@@ -60,23 +60,18 @@ export default function RelationshipPage() {
       setPageError("");
 
       try {
-        // If token exists, attempt accept-by-token first (after login, route is protected)
-        if (token) {
-          const accepted = await relationshipService.acceptByToken(token);
+        const data = await relationshipService.getMyRelationship();
 
-          if (cancelled) return;
-
-          setRelationship(accepted.relationship);
+        // If user arrived via invite link, force JOIN view and keep code
+        if (codeFromLink) {
+          setRelationship(null);
           setInvite(null);
-          setView(VIEW.DETAILS);
-          setActiveKey("DETAILS");
-
-          // clean URL (remove token)
-          navigate("/relationship", { replace: true });
+          setView(VIEW.JOIN);
+          setActiveKey("JOIN");
           return;
         }
 
-        const data = await relationshipService.getMyRelationship();
+
         if (cancelled) return;
 
         if (data.state === "LINKED") {
@@ -118,7 +113,7 @@ export default function RelationshipPage() {
     return () => {
       cancelled = true;
     };
-  }, [token, navigate]);
+  }, [codeFromLink, navigate]);
 
   // Create invite (real)
   const onCreateInvite = async () => {
@@ -251,6 +246,7 @@ Object.keys(localStorage)
 
         {!loading && !pageError && view === VIEW.JOIN && (
           <Accept
+            initialCode={codeFromLink || ""}
             lookupInviteByCode={lookupInviteByCode}
             acceptInviteByCode={acceptInviteByCode}
           />

@@ -1,14 +1,17 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
 import BackgroundLayout from "../components/BackgroundLayout";
 
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const location = useLocation();
+
+  const next = new URLSearchParams(location.search).get("next");
+  const redirectTo = next ? decodeURIComponent(next) : "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +25,7 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
-      navigate("/dashboard");
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err?.message || "Login failed");
     } finally {
@@ -72,9 +75,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
+              disabled={loading}
               className="mt-4 w-full rounded-xl bg-neutral-900 py-3 text-sm font-medium text-white shadow-md hover:bg-neutral-800 transition"
             >
-              LOGIN
+               {loading ? "LOGGING IN..." : "LOGIN"}
             </button>
           </form>
             </div>
@@ -83,7 +87,7 @@ export default function LoginPage() {
           <div className="mt-20 text-xs tracking-widest opacity-80">
             <p>DON'T HAVE AN ACCOUNT?</p>
             <button 
-            onClick={() => navigate("/signup")}
+            onClick={() => navigate(`/signup${next ? `?next=${encodeURIComponent(next)}` : ""}`)}
             className="mt-2 underline hover:opacity-70 transition">
               SIGNUP
             </button>

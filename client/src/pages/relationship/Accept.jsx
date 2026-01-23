@@ -13,10 +13,11 @@ function isCodeFormatPlausible(code) {
 }
 
 export default function Accept({
+  initialCode = "",
   lookupInviteByCode,   // async (code) => { inviterName, inviterEmail?, expiresAt }
   acceptInviteByCode,   // async (code) => void
 }) {
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(initialCode);
   const normalized = useMemo(() => normalizeCode(code), [code]);
 
   const [preview, setPreview] = useState(null);
@@ -26,6 +27,11 @@ export default function Accept({
 
   // prevents older requests from overwriting newer ones
   const lastRequestId = useRef(0);
+
+  useEffect(() => {
+    if (initialCode) setCode(initialCode);
+  }, [initialCode]);
+
 
   useEffect(() => {
     setError("");
