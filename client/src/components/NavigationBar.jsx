@@ -12,19 +12,13 @@ import {
 
 const Header = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
 
   const menuItems = [
     { label: "ACCOUNT OPTIONS", to: "/account" },
     { label: "MANAGE RELATIONSHIP", to: "/relationship" },
     { label: "About Magnetic", to: "/about" },
-    { label: "Logout", action: "logout" }, // <-- action, not route
+    { label: "Logout", to: "/logout" },
   ];
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
-  };
 
   return (
     <header className="h-20 bg-[#F2E9E1] flex items-center justify-between px-8 shadow-sm relative z-50">
@@ -53,17 +47,16 @@ const Header = () => {
               <div className="bg-[#F9F5F2] rounded-[1.5rem] overflow-hidden py-2 shadow-inner">
                 {menuItems.map((item) => (
                   <Menu.Item key={item.label}>
-                    {({ active }) => {
+                    {({ active, close }) => {
                       const baseClass =
                         `flex w-full items-center justify-between px-6 py-4 text-sm font-semibold tracking-wide transition-colors ` +
                         (active ? "bg-black/5 text-black" : "text-[#2D2D2D]");
-
-                      // Logout is a button/action
-                      if (item.action === "logout") {
-                        return (
                           <button
                             type="button"
-                            onClick={handleLogout}
+                            onClick={() => {
+                              // perform logout logic here if needed
+                              navigate("/logout");
+                            }}
                             className={baseClass}
                           >
                             <div className="flex items-center gap-3">
@@ -74,12 +67,14 @@ const Header = () => {
                             </div>
                             <ChevronRightIcon className="h-3 w-3 stroke-[3px]" />
                           </button>
-                        );
-                      }
+                      
 
-                      // Everything else is a route link
                       return (
-                        <Link to={item.to} className={baseClass}>
+                        <Link
+                          to={item.to}
+                          className={baseClass}
+                          onClick={() => close()} // close on navigation too
+                        >
                           <div className="flex items-center gap-3">
                             <div className="border border-black rounded-full p-0.5">
                               <StarIcon className="h-3 w-3" />
