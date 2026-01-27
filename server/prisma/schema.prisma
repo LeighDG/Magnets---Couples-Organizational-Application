@@ -1,23 +1,96 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
+}
+
+enum RelationshipStatus {
+  PENDING
+  ACTIVE
+  PAUSED
+}
+
+enum PartnerInviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid()) @db.Uuid
   firstName    String
   lastName     String
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  memberships        RelationshipMember[]
+  invitesSent        PartnerInvite[] @relation("InvitesSent")
+  invitesAccepted    PartnerInvite[] @relation("InvitesAccepted")
+}
+
+model Relationship {
+  id        String             @id @default(uuid()) @db.Uuid
+  status    RelationshipStatus @default(PENDING)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  // Relations
+  members RelationshipMember[]
+  invites PartnerInvite[]
+}
+
+model RelationshipMember {
+  relationshipId String       @db.Uuid
+  userId         String       @db.Uuid
+  joinedAt       DateTime     @default(now())
+
+  // Relations
+  relationship Relationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Composite Primary Key (prevents duplicates by design)
+  @@id([relationshipId, userId])
+
+  // Helpful indexes
+  @@index([userId])
+  @@index([relationshipId])
+}
+
+model PartnerInvite {
+  id              String             @id @default(uuid()) @db.Uuid
+  relationshipId   String             @db.Uuid
+  inviterUserId    String             @db.Uuid
+
+  inviteeEmail     String?            // nullable: allows “share link” invites
+  tokenHash        String             @unique
+  sharedCode       String?            @unique
+
+  status           PartnerInviteStatus @default(PENDING)
+  expiresAt        DateTime
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  acceptedAt       DateTime?
+  acceptedByUserId String?            @db.Uuid
+  revokedAt        DateTime?
+
+  // Relations
+  relationship Relationship @relation(fields: [relationshipId], references: [id], onDelete: Cascade)
+
+  inviter      User @relation("InvitesSent", fields: [inviterUserId], references: [id], onDelete: Cascade)
+  acceptedBy   User? @relation("InvitesAccepted", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+
+  // Useful indexes
+  @@index([relationshipId])
+  @@index([inviterUserId])
+  @@index([status, expiresAt])
+  @@index([inviteeEmail])
+  @@index([sharedCode])
 }

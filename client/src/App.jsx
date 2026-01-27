@@ -3,32 +3,31 @@ import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
-import PartnerLink from "./pages/PartnerLink";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RelationshipPage from "./pages/relationship/RelationshipPage";
+import Logout from "./pages/Logout";
 
 function App() {
   return (
     <Routes>
+      {/* Public */}
       <Route path="/" element={<Welcome />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/logout" element={<Logout />} />
+
+      {/* Protected */}
       <Route
-        path="/dashboard"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            {/* All protected pages go inside */}
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/partner-link"
-        element={
-          <ProtectedRoute>
-            <PartnerLink />
-          </ProtectedRoute>
-        }
-      />
-          </Routes>
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/relationship" element={<RelationshipPage />} />
+      </Route>
+    </Routes>
   );
 }
 

@@ -1,22 +1,30 @@
 // Layout.jsx
-import Sidebar from './Sidebar';
-import Navbar from './NavigationBar';
+import Sidebar from "./Sidebar";
+import Navbar from "./NavigationBar";
 
-const Layout = ({ children }) => {
+export default function Layout({
+  children,
+  sidebarTitle = "MAGNETIC",
+  sidebarItems,        // optional
+  activeSidebarKey,    // optional
+  onSidebarSelect,     // optional
+}) {
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar stays fixed on the left */}
-      <Sidebar />
-      
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col">
+      <Sidebar
+        title={sidebarTitle}
+        items={sidebarItems}
+        activeKey={activeSidebarKey}
+        onSelect={onSidebarSelect}
+      />
+
+      <div className="flex-1 flex flex-col min-h-screen">
         <Navbar />
-        <main className="">
+
+        <main className="flex-1">
           {children}
         </main>
       </div>
     </div>
   );
-};
-
-export default Layout;
+}
