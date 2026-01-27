@@ -156,12 +156,21 @@ export default function RelationshipPage() {
   };
 
   const acceptInviteByCode = async (code) => {
-    const data = await relationshipService.acceptByCode(code);
-    // data: { relationship }
-    setRelationship(data.relationship);
-    setInvite(null);
-    setView(VIEW.DETAILS);
-    setActiveKey("DETAILS");
+   const data = await relationshipService.acceptByCode(code);
+
+  setRelationship(data.relationship);
+  setInvite(null);
+  setView(VIEW.DETAILS);
+  setActiveKey("DETAILS");
+
+  // remove ?code= from the URL once accepted
+  navigate("/relationship", { replace: true });
+
+  // clear any invite residue your app stores
+  Object.keys(localStorage)
+    .filter((k) => k.startsWith("inviteLink:"))
+    .forEach((k) => localStorage.removeItem(k));
+
   };
 
   const onUnlink = async () => {
@@ -194,6 +203,9 @@ export default function RelationshipPage() {
           setInvite(null);
           setView(VIEW.DETAILS);
           setActiveKey("DETAILS");
+
+          // if user somehow has ?code= in the URL, strip it
+          if (codeFromLink) navigate("/relationship", { replace: true });
         }
       } catch {
         // ignore
@@ -201,17 +213,16 @@ export default function RelationshipPage() {
     },
 
      onRelationshipUnlinked: async () => {
-
       // cleanup any stored invite links
-Object.keys(localStorage)
-  .filter((k) => k.startsWith("inviteLink:"))
-  .forEach((k) => localStorage.removeItem(k));
+      Object.keys(localStorage)
+      .filter((k) => k.startsWith("inviteLink:"))
+      .forEach((k) => localStorage.removeItem(k));
 
-    // Force reset to unlinked state
-    setRelationship(null);
-    setInvite(null);
-    setView(VIEW.INVITE);
-    setActiveKey("INVITE");
+      // Force reset to unlinked state
+      setRelationship(null);
+      setInvite(null);
+      setView(VIEW.INVITE);
+      setActiveKey("INVITE");
   },
   });
 
