@@ -26,7 +26,9 @@ export default function WelcomePage() {
         <span className="brand">MAGNETIC</span>
         <nav className="topbar-nav" aria-label="Site navigation">
           {NAV.map((l) => (
-            <button key={l} className="nav-link">{l}</button>
+            <button key={l} className="nav-link" onClick={() => l === "About" && navigate("/about")}>
+              {l}
+            </button>
           ))}
         </nav>
       </header>

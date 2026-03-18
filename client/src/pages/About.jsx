@@ -32,7 +32,7 @@ const VISION_PILLS = [
 ];
 
 const SOCIAL = [FaLinkedinIn, FaInstagram, FaXTwitter, FaFacebookF];
-const NAV_LINKS = ["Home", "Features", "About", "Contact"];
+const NAV_LINKS = ["Home", "About"];
 
 export default function AboutPage() {
   const navigate = useNavigate();
@@ -65,13 +65,6 @@ export default function AboutPage() {
               {l}
             </button>
           ))}
-          <button
-            className="nav-cta"
-            onClick={() => handleNav("login")}
-            disabled={navigating !== null}
-          >
-            {navigating === "login" ? "Loading…" : "Log In"}
-          </button>
         </nav>
       </header>
 
@@ -310,22 +303,6 @@ export default function AboutPage() {
         .nav-link--active       { color: var(--white-90); }
         .nav-link:disabled      { cursor: default; }
         .nav-link:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 4px; border-radius: 4px; }
-
-        .nav-cta {
-          padding: 8px 20px;
-          background: var(--white-12);
-          border: 1px solid rgba(255,255,255,0.2);
-          border-radius: 20px;
-          font-size: 12px;
-          color: var(--white-78);
-          cursor: pointer;
-          font-family: var(--font-sans);
-          min-height: 44px;
-          transition: background 0.15s ease, color 0.15s ease;
-        }
-        .nav-cta:hover         { background: rgba(255,255,255,0.18); color: var(--white-90); }
-        .nav-cta:disabled      { opacity: 0.6; cursor: default; }
-        .nav-cta:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 3px; border-radius: 20px; }
 
         /* ---------- HERO ---------- */
         .about-hero {
