@@ -9,7 +9,7 @@ const FEATURES = [
 ];
 
 const SOCIAL = [FaLinkedinIn, FaInstagram, FaXTwitter, FaFacebookF];
-const NAV    = ["About", "Features", "Contact"];
+const NAV    = ["About"];
 
 export default function WelcomePage() {
   const navigate = useNavigate();
