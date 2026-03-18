@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RelationshipPage from "./pages/relationship/RelationshipPage";
 import Logout from "./pages/Logout";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/logout" element={<Logout />} />
+      <Route path="/about" element={<About />} />
 
       {/* Protected */}
       <Route
