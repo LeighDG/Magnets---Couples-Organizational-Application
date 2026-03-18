@@ -258,13 +258,13 @@ export default function WelcomePage() {
 
         @-webkit-keyframes wave {
           0%,100% { -webkit-transform: rotate(0deg); transform: rotate(0deg); }
-          25%      { -webkit-transform: rotate(18deg); transform: rotate(18deg); }
-          75%      { -webkit-transform: rotate(-8deg); transform: rotate(-8deg); }
+          25%      { -webkit-transform: rotate(18deg); transform: rotate(10deg); }
+          75%      { -webkit-transform: rotate(-8deg); transform: rotate(0deg); }
         }
         @keyframes wave {
           0%,100% { transform: rotate(0deg); }
-          25%      { transform: rotate(18deg); }
-          75%      { transform: rotate(-8deg); }
+          25%      { transform: rotate(10deg); }
+          75%      { transform: rotate(0deg); }
         }
 
         /* Prefers-reduced-motion: respect user accessibility setting */
