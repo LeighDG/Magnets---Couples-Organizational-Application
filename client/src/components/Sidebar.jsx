@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
 const HomeIcon = () => (
@@ -61,23 +62,26 @@ const FLYOUT_ITEMS = [
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Sidebar({ flyoutOpen, onToggleFlyout, activeFlyoutKey, onFlyoutSelect }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = (path) => location.pathname.startsWith(path);
 
   return (
     <>
       {/* ── Icon sidebar ─────────────────────────────────────────────────── */}
       <nav className="dash-sidebar" aria-label="Main navigation">
         <button
-          className="nav-item nav-item--active"
+          className={`nav-item${isActive("/dashboard") ? " nav-item--active" : ""}`}
           aria-label="Home"
-          aria-current="page"
+          aria-current={isActive("/dashboard") ? "page" : undefined}
           onClick={() => navigate("/dashboard")}
         >
           <HomeIcon />
         </button>
 
         <button
-          className="nav-item"
+          className={`nav-item${isActive("/relationship") ? " nav-item--active" : ""}`}
           aria-label="Partner relationship"
+          aria-current={isActive("/relationship") ? "page" : undefined}
           onClick={() => navigate("/relationship")}
         >
           <HeartIcon />
@@ -95,15 +99,16 @@ export default function Sidebar({ flyoutOpen, onToggleFlyout, activeFlyoutKey, o
         <div className="nav-spacer" />
 
         <button
-          className="nav-item"
+          className={`nav-item${isActive("/about") ? " nav-item--active" : ""}`}
           aria-label="About Magnetic"
+          aria-current={isActive("/about") ? "page" : undefined}
           onClick={() => navigate("/about")}
         >
           <InfoIcon />
         </button>
 
         <button
-          className="nav-item"
+          className={`nav-item${isActive("/relationship") ? " nav-item--active" : ""}`}
           aria-label="Profile"
           onClick={() => navigate("/relationship")}
         >
@@ -111,10 +116,10 @@ export default function Sidebar({ flyoutOpen, onToggleFlyout, activeFlyoutKey, o
         </button>
 
         <button
-          className="nav-item"
+          className={`nav-item${isActive("/settings") ? " nav-item--active" : ""}`}
           aria-label="Settings"
-          title="Coming soon"
-          disabled
+          aria-current={isActive("/settings") ? "page" : undefined}
+          onClick={() => navigate("/settings")}
         >
           <SettingsIcon />
         </button>
