@@ -6,18 +6,7 @@ import NavigationBar from "./NavigationBar";
 export default function LayoutWrapper({
   children,
   pageTitle,            // passed to NavigationBar
-  activeFlyoutKey,      // optional: highlight a flyout item from the page
-  onFlyoutSelect,       // optional: callback when a flyout item is clicked
 }) {
-  const [flyoutOpen, setFlyoutOpen] = useState(false);
-
-  const handleToggleFlyout = () => setFlyoutOpen((prev) => !prev);
-
-  const handleFlyoutSelect = (key) => {
-    onFlyoutSelect?.(key);
-    // Keep flyout open after selection so user can navigate
-  };
-
   return (
     <div className="layout-root">
 
@@ -26,16 +15,9 @@ export default function LayoutWrapper({
         <span className="layout-brand">MAGNETIC</span>
       </header>
 
-      {/* ── Body: sidebar + flyout + content ── */}
+      {/* ── Body: sidebar ── */}
       <div className="layout-body">
-
-        {/* Sidebar + flyout are co-located so flyout pushes content in-flow */}
-        <Sidebar
-          flyoutOpen={flyoutOpen}
-          onToggleFlyout={handleToggleFlyout}
-          activeFlyoutKey={activeFlyoutKey}
-          onFlyoutSelect={handleFlyoutSelect}
-        />
+        <Sidebar/>
 
         {/* Content panel */}
         <div className="layout-content">
@@ -108,8 +90,6 @@ export default function LayoutWrapper({
           flex-direction: column;
           overflow: hidden;
           min-width: 0;
-          /* Smooth when flyout opens/closes */
-          transition: border-radius 0.28s cubic-bezier(0.4,0,0.2,1);
         }
 
         .layout-main {

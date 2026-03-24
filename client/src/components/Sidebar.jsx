@@ -1,5 +1,4 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
 
 // ── SVG icons ─────────────────────────────────────────────────────────────────
 const HomeIcon = () => (
@@ -8,32 +7,38 @@ const HomeIcon = () => (
   </svg>
 );
 
-const HeartIcon = () => (
+const CalendarIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 000-7.8z"/>
+    <rect x="3" y="4" width="18" height="18" rx="2"/>
+    <line x1="16" y1="2" x2="16" y2="6"/>
+    <line x1="8" y1="2" x2="8" y2="6"/>
+    <line x1="3" y1="10" x2="21" y2="10"/>
+    <line x1="8" y1="14" x2="8" y2="14"/>
+    <line x1="12" y1="14" x2="12" y2="14"/>
+    <line x1="16" y1="14" x2="16" y2="14"/>
+    <line x1="8" y1="18" x2="8" y2="18"/>
+    <line x1="12" y1="18" x2="12" y2="18"/>
   </svg>
 );
 
-const MenuIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <line x1="3" y1="6"  x2="21" y2="6"/>
-    <line x1="3" y1="12" x2="21" y2="12"/>
-    <line x1="3" y1="18" x2="21" y2="18"/>
+const NotepadIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="4" y="2" width="16" height="20" rx="2"/>
+    <line x1="8" y1="2" x2="8" y2="6"/>
+    <line x1="12" y1="2" x2="12" y2="6"/>
+    <line x1="16" y1="2" x2="16" y2="6"/>
+    <line x1="8" y1="11" x2="16" y2="11"/>
+    <line x1="8" y1="15" x2="16" y2="15"/>
+    <line x1="8" y1="19" x2="12" y2="19"/>
   </svg>
 );
 
-const InfoIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-    <circle cx="12" cy="12" r="10"/>
-    <line x1="12" y1="16" x2="12" y2="12"/>
-    <line x1="12" y1="8" x2="12.01" y2="8"/>
-  </svg>
-);
-
-const UserIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-    <circle cx="12" cy="8" r="4"/>
-    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+const BudgetIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 6v1.5"/>
+    <path d="M12 15.5V17"/>
+    <path d="M9 9.5a3 3 0 015.5 1.5c0 2-3 2.5-3 4.5"/>
   </svg>
 );
 
@@ -44,34 +49,18 @@ const SettingsIcon = () => (
   </svg>
 );
 
-const ChevronIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <line x1="5" y1="12" x2="19" y2="12"/>
-    <polyline points="12 5 19 12 12 19"/>
-  </svg>
-);
-
-// ── Flyout items ──────────────────────────────────────────────────────────────
-const FLYOUT_ITEMS = [
-  { key: "CALENDAR",  label: "CALENDAR"  },
-  { key: "BUDGETING", label: "BUDGETING" },
-  { key: "LISTS",     label: "LISTS"     },
-  { key: "NOTES",     label: "NOTES"     },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-export default function Sidebar({ flyoutOpen, onToggleFlyout, activeFlyoutKey, onFlyoutSelect }) {
+export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = (path) => location.pathname.startsWith(path);
 
   return (
     <>
-      {/* ── Icon sidebar ─────────────────────────────────────────────────── */}
       <nav className="dash-sidebar" aria-label="Main navigation">
         <button
           className={`nav-item${isActive("/dashboard") ? " nav-item--active" : ""}`}
           aria-label="Home"
+          data-tooltip="Home"
           aria-current={isActive("/dashboard") ? "page" : undefined}
           onClick={() => navigate("/dashboard")}
         >
@@ -79,45 +68,41 @@ export default function Sidebar({ flyoutOpen, onToggleFlyout, activeFlyoutKey, o
         </button>
 
         <button
-          className={`nav-item${isActive("/relationship") ? " nav-item--active" : ""}`}
-          aria-label="Partner relationship"
-          aria-current={isActive("/relationship") ? "page" : undefined}
-          onClick={() => navigate("/relationship")}
+          className={`nav-item${isActive("/calendar") ? " nav-item--active" : ""}`}
+          aria-label="Calendar"
+          data-tooltip="Calendar"
+          aria-current={isActive("/calendar") ? "page" : undefined}
+          onClick={() => navigate("/calendar")}
         >
-          <HeartIcon />
+          <CalendarIcon />
         </button>
 
         <button
-          className={`nav-item${flyoutOpen ? " nav-item--active" : ""}`}
-          aria-label="Toggle navigation menu"
-          aria-expanded={flyoutOpen}
-          onClick={onToggleFlyout}
+          className={`nav-item${isActive("/budget") ? " nav-item--active" : ""}`}
+          aria-label="Budget"
+          data-tooltip="Budget"
+          aria-current={isActive("/budget") ? "page" : undefined}
+          onClick={() => navigate("/budget")}
         >
-          <MenuIcon />
+          <BudgetIcon />
+        </button>
+
+        <button
+          className={`nav-item${isActive("/notes") ? " nav-item--active" : ""}`}
+          aria-label="Notes"
+          data-tooltip="Notes"
+          aria-current={isActive("/notes") ? "page" : undefined}
+          onClick={() => navigate("/notes")}
+        >
+          <NotepadIcon />
         </button>
 
         <div className="nav-spacer" />
 
         <button
-          className={`nav-item${isActive("/about") ? " nav-item--active" : ""}`}
-          aria-label="About Magnetic"
-          aria-current={isActive("/about") ? "page" : undefined}
-          onClick={() => navigate("/about")}
-        >
-          <InfoIcon />
-        </button>
-
-        <button
-          className={`nav-item${isActive("/relationship") ? " nav-item--active" : ""}`}
-          aria-label="Profile"
-          onClick={() => navigate("/relationship")}
-        >
-          <UserIcon />
-        </button>
-
-        <button
           className={`nav-item${isActive("/settings") ? " nav-item--active" : ""}`}
           aria-label="Settings"
+          data-tooltip="Settings"
           aria-current={isActive("/settings") ? "page" : undefined}
           onClick={() => navigate("/settings")}
         >
@@ -125,29 +110,6 @@ export default function Sidebar({ flyoutOpen, onToggleFlyout, activeFlyoutKey, o
         </button>
       </nav>
 
-      {/* ── Flyout panel ─────────────────────────────────────────────────── */}
-      <div
-        className={`dash-flyout${flyoutOpen ? " dash-flyout--open" : ""}`}
-        aria-hidden={!flyoutOpen}
-      >
-        <div className="flyout-inner" role="menu">
-          {FLYOUT_ITEMS.map((item) => (
-            <button
-              key={item.key}
-              className={`flyout-item${activeFlyoutKey === item.key ? " flyout-item--active" : ""}`}
-              role="menuitem"
-              onClick={() => onFlyoutSelect?.(item.key)}
-              title="Coming soon"
-              disabled
-            >
-              <span>{item.label}</span>
-              <ChevronIcon />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Styles ───────────────────────────────────────────────────────── */}
       <style>{`
         .dash-sidebar {
           width: 64px;
@@ -174,11 +136,12 @@ export default function Sidebar({ flyoutOpen, onToggleFlyout, activeFlyoutKey, o
           border: none;
           flex-shrink: 0;
           transition: background 0.15s ease, color 0.15s ease;
+          position: relative;
         }
-        .nav-item svg          { width: 18px; height: 18px; }
-        .nav-item:hover        { background: rgba(255,255,255,0.12); color: #fff; }
-        .nav-item--active      { background: rgba(255,255,255,0.18); color: #fff; }
-        .nav-item:disabled     { opacity: 0.4; cursor: default; }
+        .nav-item svg            { width: 18px; height: 18px; }
+        .nav-item:hover          { background: rgba(255,255,255,0.12); color: #fff; }
+        .nav-item--active        { background: rgba(255,255,255,0.18); color: #fff; }
+        .nav-item:disabled       { opacity: 0.4; cursor: default; }
         .nav-item:disabled:hover { background: none; }
         .nav-item:focus-visible  {
           outline: 2px solid rgba(255,255,255,0.45);
@@ -186,76 +149,33 @@ export default function Sidebar({ flyoutOpen, onToggleFlyout, activeFlyoutKey, o
           border-radius: 12px;
         }
 
-        .nav-spacer { flex: 1; }
-
-        /* ── Flyout ── */
-        .dash-flyout {
-          width: 0;
-          flex-shrink: 0;
-          overflow: hidden;
-          transition: width 0.28s cubic-bezier(0.4,0,0.2,1);
-          display: flex;
-          align-items: flex-start;
-          padding-top: 4px;
-          z-index: 9;
-        }
-        .dash-flyout--open { width: 168px; }
-
-        .flyout-inner {
-          width: 168px;
-          flex-shrink: 0;
-          background: rgba(48, 78, 68, 0.97);
-          border-radius: 14px;
-          padding: 10px 8px;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          border: 1px solid rgba(255,255,255,0.10);
-          -webkit-backdrop-filter: blur(8px);
-          backdrop-filter: blur(8px);
-        }
-
-        @supports not (backdrop-filter: blur(1px)) {
-          .flyout-inner { background: #243d36; }
-        }
-
-        .flyout-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 10px 14px;
-          border-radius: 10px;
-          background: none;
-          border: none;
+        /* ── Tooltip ── */
+        .nav-item::after {
+          content: attr(data-tooltip);
+          position: absolute;
+          left: calc(100% + 12px);
+          top: 50%;
+          transform: translateY(-50%) translateX(-4px);
+          background: rgba(20, 20, 20, 0.92);
+          color: #fff;
           font-family: 'DM Sans', system-ui, sans-serif;
-          color: rgba(255,255,255,0.82);
           font-size: 12px;
-          letter-spacing: 1.5px;
-          text-transform: uppercase;
           font-weight: 500;
+          padding: 5px 10px;
+          border-radius: 7px;
           white-space: nowrap;
-          width: 100%;
-          cursor: pointer;
-          min-height: 44px;
-          transition: background 0.12s ease, color 0.12s ease;
-        }
-        .flyout-item svg           { width: 13px; height: 13px; flex-shrink: 0; }
-        .flyout-item:hover:not(:disabled) { background: rgba(255,255,255,0.12); color: #fff; }
-        .flyout-item--active       { background: rgba(255,255,255,0.15); color: #fff; }
-        .flyout-item:disabled      { opacity: 0.5; cursor: default; }
-        .flyout-item:focus-visible {
-          outline: 2px solid rgba(255,255,255,0.4);
-          outline-offset: 2px;
-          border-radius: 10px;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 0.15s ease, transform 0.15s ease;
+          z-index: 100;
         }
 
-        @media (prefers-reduced-motion: reduce) {
-          .dash-flyout { transition: none; }
+        .nav-item:hover::after {
+          opacity: 1;
+          transform: translateY(-50%) translateX(0);
         }
 
-        @media (max-width: 400px) {
-          .dash-sidebar { display: none; }
-        }
+        .nav-spacer { flex: 1; }
       `}</style>
     </>
   );
