@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -29,10 +30,22 @@ function todayLabel() {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 export default function NavigationBar({ pageTitle = "Dashboard" }) {
-  const navigate     = useNavigate();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -59,8 +72,14 @@ export default function NavigationBar({ pageTitle = "Dashboard" }) {
         </button>
 
         {/* User menu */}
-        <div className="user-menu-wrapper">
-          <button className="user-btn" aria-label="User menu" aria-haspopup="true">
+        <div className="user-menu-wrapper" ref={menuRef}>
+          <button
+            className="user-btn"
+            aria-label="User menu"
+            aria-haspopup="true"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(prev => !prev)}
+          >
             <div className="user-avatar">
               <UserIcon />
             </div>
@@ -70,18 +89,18 @@ export default function NavigationBar({ pageTitle = "Dashboard" }) {
             <ChevronDownIcon />
           </button>
 
-          <div className="user-dropdown" role="menu">
+          <div className="user-dropdown" role="menu" style={{ display: menuOpen ? "flex" : "none" }}>
             <button
               className="dropdown-item"
               role="menuitem"
-              onClick={() => navigate("/relationship")}
+              onClick={() => { navigate("/relationship"); setMenuOpen(false); }}
             >
               Manage Relationship
             </button>
             <button
               className="dropdown-item"
               role="menuitem"
-              onClick={() => navigate("/about")}
+              onClick={() => { navigate("/about"); setMenuOpen(false); }}
             >
               About Magnetic
             </button>
@@ -233,16 +252,9 @@ export default function NavigationBar({ pageTitle = "Dashboard" }) {
           border-radius: 14px;
           padding: 6px;
           box-shadow: 0 8px 24px rgba(0,0,0,0.10);
-          display: none;
           z-index: 50;
           flex-direction: column;
           gap: 2px;
-        }
-
-        /* Show on parent hover OR focus-within */
-        .user-menu-wrapper:hover .user-dropdown,
-        .user-menu-wrapper:focus-within .user-dropdown {
-          display: flex;
         }
 
         .dropdown-item {
