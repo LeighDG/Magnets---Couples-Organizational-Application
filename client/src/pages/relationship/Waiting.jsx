@@ -19,7 +19,7 @@ export default function Waiting({ invite, onCopyLink, onCancel }) {
   return (
     <div className="max-w-4xl mx-auto mt-12">
       {/* Glassmorphism Card */}
-      <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-12 shadow-2xl overflow-hidden">
+      <div className="relative bg-[#0f0c09bf] rounded-lg p-12 shadow-2xl overflow-hidden">
         <div className="flex flex-col md:flex-row justify-between items-start gap-12">
           <div className="flex-1 space-y-6">
             <div>

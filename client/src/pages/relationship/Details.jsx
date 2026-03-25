@@ -3,7 +3,7 @@ export default function Details({ relationship, onUnlink }) {
 
   return (
     <div className="max-w-4xl mx-auto mt-12">
-      <div className="relative bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-12 shadow-2xl overflow-hidden">
+      <div className="relative bg-[#0f0c09bf] rounded-lg p-12 shadow-2xl overflow-hidden">
         <h2 className="text-4xl font-bold text-white tracking-tight mb-4">
           RELATIONSHIP DETAILS
         </h2>
