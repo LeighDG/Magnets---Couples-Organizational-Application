@@ -2,56 +2,80 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import BackgroundLayout from "../../components/BackgroundLayout";
 import LayoutWrapper from "../../components/Layout-Wrapper";
 
-import Invite from "./Invite";
+import Invite  from "./Invite";
 import Waiting from "./Waiting";
-import Accept from "./Accept";
+import Accept  from "./Accept";
 import Details from "./Details";
-import { RELATIONSHIP_NAV } from "./relationshipNav";
+import RelationshipNav from "./RelationshipNavBar";
 
 import * as relationshipService from "../../services/relationshipService";
 import useRealtimeStream from "../../hooks/useRealtimeStream.cjs";
 
+// ── View constants ─────────────────────────────────────────────────────────────
 
 const VIEW = {
-  INVITE: "INVITE",
+  INVITE:  "INVITE",
   WAITING: "WAITING",
-  JOIN: "JOIN",
+  JOIN:    "JOIN",
   DETAILS: "DETAILS",
 };
+
+// ── Nav visibility rules ───────────────────────────────────────────────────────
+//
+//  State 1 — unlinked, no pending invite    → [ INVITE,   JOIN ]
+//  State 2 — unlinked, invite sent (waiting)→ [ WAITING*, JOIN ]   * locked / amber
+//  State 3 — unlinked, user joining         → [ INVITE,   JOIN ]   JOIN is active
+//  State 4 — linked                         → [ DETAILS ]
+//
+//  INVITE/WAITING/JOIN are NEVER shown when linked.
+//  DETAILS is NEVER shown when not linked.
+
+function visibleNavKeys(view) {
+  switch (view) {
+    case VIEW.DETAILS: return [VIEW.DETAILS];
+    case VIEW.WAITING: return [VIEW.WAITING, VIEW.JOIN];
+    case VIEW.JOIN:    return [VIEW.INVITE,  VIEW.JOIN];
+    default:           return [VIEW.INVITE,  VIEW.JOIN];  // INVITE view
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function useQuery() {
   const { search } = useLocation();
   return useMemo(() => new URLSearchParams(search), [search]);
 }
 
+// ── Component ──────────────────────────────────────────────────────────────────
+
 export default function RelationshipPage() {
-  const navigate = useNavigate();
-  const query = useQuery();
-  const codeFromLink = query.get("code"); // new link format
+  const navigate     = useNavigate();
+  const query        = useQuery();
+  const codeFromLink = query.get("code");
 
-  const [view, setView] = useState(VIEW.INVITE);
-  const [activeKey, setActiveKey] = useState("INVITE");
-
-  const [loading, setLoading] = useState(true);
-  const [pageError, setPageError] = useState("");
-
-  const [invite, setInvite] = useState(null);
+  const [view,         setView]         = useState(VIEW.INVITE);
+  const [loading,      setLoading]      = useState(true);
+  const [pageError,    setPageError]    = useState("");
+  const [invite,       setInvite]       = useState(null);
   const [relationship, setRelationship] = useState(null);
 
-  const sidebarItems = useMemo(() => RELATIONSHIP_NAV, []);
+  const navKeys  = useMemo(() => visibleNavKeys(view), [view]);
+  const activeKey = view;
 
-  const onSidebarSelect = (key) => {
-    setActiveKey(key);
-
-    if (key === "INVITE") setView(invite ? VIEW.WAITING : VIEW.INVITE);
-    if (key === "JOIN") setView(VIEW.JOIN);
-    if (key === "DETAILS") setView(VIEW.DETAILS);
+  // ── Nav selection ──────────────────────────────────────────────────────────
+  // WAITING is a locked state — it cannot be selected directly.
+  // DETAILS is only reachable when linked (navKeys won't include it otherwise).
+  // INVITE is blocked when in WAITING (user must cancel first via the Waiting UI).
+  const onNavSelect = (key) => {
+    if (key === VIEW.WAITING) return;             // locked — no direct nav
+    if (key === VIEW.DETAILS && view !== VIEW.DETAILS) return; // shouldn't be visible anyway
+    if (key === VIEW.INVITE  && view === VIEW.WAITING) return; // must cancel invite first
+    setView(key);
   };
 
-  // Bootstrap state from backend: /relationship/me
+  // ── Bootstrap: determine correct state on every page load / return ─────────
   useEffect(() => {
     let cancelled = false;
 
@@ -62,45 +86,46 @@ export default function RelationshipPage() {
       try {
         const data = await relationshipService.getMyRelationship();
 
-        // If user arrived via invite link, force JOIN view and keep code
-        if (codeFromLink) {
-          setRelationship(null);
-          setInvite(null);
-          setView(VIEW.JOIN);
-          setActiveKey("JOIN");
-          return;
-        }
-
-
         if (cancelled) return;
 
+        // State 3 — user is linked → always DETAILS, no other views available
         if (data.state === "LINKED") {
           setRelationship(data.relationship);
           setInvite(null);
           setView(VIEW.DETAILS);
-          setActiveKey("DETAILS");
+          // Strip any stale ?code= from the URL
+          if (codeFromLink) navigate("/relationship", { replace: true });
           return;
         }
 
+        // State 5 — user generated an invite and returned to the page
         if (data.state === "WAITING") {
-          // /relationship/me does NOT return link token; we’ll reconstruct link client-side
-          const link = `${window.location.origin}/relationship`; // token only returned when created
           setInvite({
             sharedCode: data.invite?.sharedCode || null,
-            expiresAt: data.invite?.expiresAt || null,
-            link: link, // placeholder; real link shown only right after creation
+            expiresAt:  data.invite?.expiresAt  || null,
+            // The real shareable link is only returned on creation;
+            // reconstruct the code-based link for the waiting screen.
+            link: data.invite?.sharedCode
+              ? `${window.location.origin}/relationship?code=${encodeURIComponent(data.invite.sharedCode)}`
+              : `${window.location.origin}/relationship`,
           });
           setRelationship(null);
           setView(VIEW.WAITING);
-          setActiveKey("INVITE");
           return;
         }
 
-        // UNLINKED (default)
+        // State 2 — user arrived via an invite link → go straight to JOIN
+        if (codeFromLink) {
+          setRelationship(null);
+          setInvite(null);
+          setView(VIEW.JOIN);
+          return;
+        }
+
+        // State 1 — unlinked, nothing pending
         setRelationship(null);
         setInvite(null);
         setView(VIEW.INVITE);
-        setActiveKey("INVITE");
 
       } catch (e) {
         if (!cancelled) setPageError(e.message || "Failed to load relationship state");
@@ -110,91 +135,78 @@ export default function RelationshipPage() {
     }
 
     boot();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [codeFromLink, navigate]);
 
-  // Create invite (real)
+  // ── Actions ────────────────────────────────────────────────────────────────
+
+  // State 1 → State 2
   const onCreateInvite = async () => {
     setPageError("");
     try {
       const data = await relationshipService.createInvite();
-      // data: { sharedCode, expiresAt, link }
       setInvite({
         sharedCode: data.sharedCode,
-        expiresAt: data.expiresAt,
-        link: data.link,
+        expiresAt:  data.expiresAt,
+        link:       data.link,
       });
       setView(VIEW.WAITING);
-      setActiveKey("INVITE");
     } catch (e) {
       setPageError(e.message || "Failed to create invite");
     }
   };
 
   const onCopyLink = async () => {
-    if (!invite?.link) return;
-    await navigator.clipboard.writeText(invite.link);
+    if (invite?.link) await navigator.clipboard.writeText(invite.link);
   };
 
+  // State 2 → State 1 (cancel invite)
   const onCancel = async () => {
     setPageError("");
     try {
       await relationshipService.revokeInvite();
       setInvite(null);
       setView(VIEW.INVITE);
-      setActiveKey("INVITE");
     } catch (e) {
       setPageError(e.message || "Failed to cancel invite");
     }
   };
 
-  // Accept page hooks
-  const lookupInviteByCode = async (code) => {
-    return relationshipService.lookupByCode(code);
-  };
+  const lookupInviteByCode = (code) => relationshipService.lookupByCode(code);
 
+  // State 2 acceptee / State 3 for both users
   const acceptInviteByCode = async (code) => {
-   const data = await relationshipService.acceptByCode(code);
-
-  setRelationship(data.relationship);
-  setInvite(null);
-  setView(VIEW.DETAILS);
-  setActiveKey("DETAILS");
-
-  // remove ?code= from the URL once accepted
-  navigate("/relationship", { replace: true });
-
-  // clear any invite residue your app stores
-  Object.keys(localStorage)
-    .filter((k) => k.startsWith("inviteLink:"))
-    .forEach((k) => localStorage.removeItem(k));
-
+    const data = await relationshipService.acceptByCode(code);
+    setRelationship(data.relationship);
+    setInvite(null);
+    setView(VIEW.DETAILS);
+    navigate("/relationship", { replace: true });
+    Object.keys(localStorage)
+      .filter(k => k.startsWith("inviteLink:"))
+      .forEach(k => localStorage.removeItem(k));
   };
 
+  // State 3 → State 4 (unlink → back to INVITE)
   const onUnlink = async () => {
-  setPageError("");
-  try {
+    setPageError("");
     const ok = window.confirm(
       "Are you sure you want to unlink? Shared features will stop syncing."
     );
     if (!ok) return;
+    try {
+      await relationshipService.unlinkRelationship();
+      setRelationship(null);
+      setInvite(null);
+      setView(VIEW.INVITE);
+    } catch (e) {
+      setPageError(e.message || "Failed to unlink relationship");
+    }
+  };
 
-    await relationshipService.unlinkRelationship();
+  // ── Real-time events ───────────────────────────────────────────────────────
 
-    // Reset UI state to unlinked
-    setRelationship(null);
-    setInvite(null);
-    setView(VIEW.INVITE);
-    setActiveKey("INVITE");
-  } catch (e) {
-    setPageError(e.message || "Failed to unlink relationship");
-  }
-};
-
-  // Real-time: when partner accepts, jump inviter to DETAILS
   useRealtimeStream({
+    // Partner accepted → inviter jumps to DETAILS (State 2 → State 3)
     onRelationshipLinked: async () => {
       try {
         const data = await relationshipService.getMyRelationship();
@@ -202,71 +214,78 @@ export default function RelationshipPage() {
           setRelationship(data.relationship);
           setInvite(null);
           setView(VIEW.DETAILS);
-          setActiveKey("DETAILS");
-
-          // if user somehow has ?code= in the URL, strip it
-          if (codeFromLink) navigate("/relationship", { replace: true });
+          navigate("/relationship", { replace: true });
         }
-      } catch {
-        // ignore
-      }
+      } catch { /* ignore */ }
     },
 
-     onRelationshipUnlinked: async () => {
-      // cleanup any stored invite links
+    // Either user unlinked remotely → both go back to INVITE (State 4)
+    onRelationshipUnlinked: () => {
       Object.keys(localStorage)
-      .filter((k) => k.startsWith("inviteLink:"))
-      .forEach((k) => localStorage.removeItem(k));
-
-      // Force reset to unlinked state
+        .filter(k => k.startsWith("inviteLink:"))
+        .forEach(k => localStorage.removeItem(k));
       setRelationship(null);
       setInvite(null);
       setView(VIEW.INVITE);
-      setActiveKey("INVITE");
-  },
+    },
   });
 
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
-    <BackgroundLayout>
-      <LayoutWrapper
-        sidebarItems={sidebarItems}
-        activeSidebarKey={activeKey}
-        onSidebarSelect={onSidebarSelect}
-      >
-        {loading ? (
-          <div className="max-w-4xl mx-auto mt-12 text-white">
-            Loading...
-          </div>
-        ) : null}
+    <LayoutWrapper pageTitle="Your Relationship" >
+      <div className="flex flex-col min-h-screen">
+        <main className="flex-1 pb-28">
 
-        {!loading && pageError ? (
-          <div className="max-w-4xl mx-auto mt-12">
-            <div className="bg-red-500/20 border border-red-500/30 text-red-100 px-4 py-3 rounded">
-              {pageError}
+          {loading && (
+            <div className="max-w-4xl mx-auto mt-12 px-4 text-white text-sm opacity-60 tracking-wide">
+              Loading...
             </div>
-          </div>
-        ) : null}
+          )}
 
-        {!loading && !pageError && view === VIEW.INVITE && (
-          <Invite onCreateInvite={onCreateInvite} />
-        )}
+          {!loading && pageError && (
+            <div className="max-w-4xl mx-auto mt-12 px-4">
+              <div className="bg-red-500/20 border border-red-500/30 text-red-100 px-4 py-3 rounded text-sm">
+                {pageError}
+              </div>
+            </div>
+          )}
 
-        {!loading && !pageError && view === VIEW.WAITING && (
-          <Waiting invite={invite} onCopyLink={onCopyLink} onCancel={onCancel} />
-        )}
+          {/* State 1 — unlinked, no invite */}
+          {!loading && !pageError && view === VIEW.INVITE && (
+            <Invite onCreateInvite={onCreateInvite} />
+          )}
 
-        {!loading && !pageError && view === VIEW.JOIN && (
-          <Accept
-            initialCode={codeFromLink || ""}
-            lookupInviteByCode={lookupInviteByCode}
-            acceptInviteByCode={acceptInviteByCode}
-          />
-        )}
+          {/* State 2 / State 5 — invite sent, awaiting partner */}
+          {!loading && !pageError && view === VIEW.WAITING && (
+            <Waiting invite={invite} onCopyLink={onCopyLink} onCancel={onCancel} />
+          )}
 
-        {!loading && !pageError && view === VIEW.DETAILS && (
-          <Details relationship={relationship} onUnlink={onUnlink}/>
-        )}
-      </LayoutWrapper>
-    </BackgroundLayout>
+          {/* State 2 (acceptee) — arrived via invite link or navigated to JOIN */}
+          {!loading && !pageError && view === VIEW.JOIN && (
+            <Accept
+              initialCode={codeFromLink || ""}
+              lookupInviteByCode={lookupInviteByCode}
+              acceptInviteByCode={acceptInviteByCode}
+            />
+          )}
+
+          {/* State 3 — linked */}
+          {!loading && !pageError && view === VIEW.DETAILS && (
+            <Details relationship={relationship} onUnlink={onUnlink} />
+          )}
+
+        </main>
+      </div>
+
+      {/* Floating bottom nav — rendered after loading resolves */}
+      {!loading && (
+        <RelationshipNav
+          visibleKeys={navKeys}
+          activeKey={activeKey}
+          onSelect={onNavSelect}
+        />
+      )}
+    </LayoutWrapper>
   );
 }
